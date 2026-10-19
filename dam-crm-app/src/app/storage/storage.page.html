@@ -11,14 +11,27 @@
     </ion-buttons>
   </ion-toolbar>
 
-  <!-- SELECTOR DE BUCKET -->
+  <!-- SELECTOR Y ENTRADA DE BUCKET -->
   <ion-toolbar color="light">
-    <div class="bucket-bar">
-      <div class="bucket-label">
-        <ion-icon name="folder-outline"></ion-icon>
-        <strong>Bucket:</strong>
+    <div class="bucket-container">
+      <div class="bucket-input-row">
+        <ion-item lines="none" class="bucket-input-item">
+          <ion-icon slot="start" name="folder-outline" color="primary"></ion-icon>
+          <ion-input
+            [(ngModel)]="currentBucket"
+            (keyup.enter)="loadImages()"
+            placeholder="Escribe el nombre de tu bucket en Supabase"
+            aria-label="Nombre del Bucket">
+          </ion-input>
+        </ion-item>
+        <ion-button size="small" (click)="loadImages()" fill="solid">
+          <ion-icon slot="start" name="search-outline"></ion-icon>
+          Buscar
+        </ion-button>
       </div>
-      <div class="bucket-chips">
+
+      <div class="bucket-chips-row">
+        <span class="chips-label">Sugeridos:</span>
         @for (b of availableBuckets; track b) {
         <ion-chip [color]="currentBucket === b ? 'primary' : 'medium'" (click)="selectBucket(b)">
           {{ b }}
@@ -58,7 +71,7 @@
   @if (isLoading) {
   <div class="loading-state">
     <ion-spinner name="bubbles" color="primary"></ion-spinner>
-    <p>Cargando imágenes de Supabase Storage...</p>
+    <p>Buscando imágenes en el bucket '{{ currentBucket }}'...</p>
   </div>
   }
 
@@ -107,15 +120,21 @@
   <ion-card color="light" class="empty-card">
     <ion-card-content>
       <ion-icon name="images-outline" class="empty-icon"></ion-icon>
-      <h3>No hay imágenes en el bucket <code>{{ currentBucket }}</code></h3>
+      <h3>No se encontraron imágenes en el bucket <code>{{ currentBucket }}</code></h3>
       <p>
-        Puedes pulsar en <strong>"Subir Nueva Imagen"</strong> para añadir una fotografía directamente, o cambiar de bucket arriba si creaste uno con otro nombre.
+        Si creaste un bucket con otro nombre en Supabase, escribe su nombre exacto en el buscador superior y haz clic en <strong>"Buscar"</strong>.
       </p>
       <div class="rls-hint">
         <ion-icon name="alert-circle-outline"></ion-icon>
-        <small>
-          <strong>Nota sobre RLS en Storage:</strong> Para leer imágenes anónimamente, tu bucket debe estar marcado como <em>Public</em> o tener una política SELECT en <code>storage.objects</code>.
-        </small>
+        <div>
+          <strong>¿Subiste una foto y sigue sin verse? Comprueba esto en Supabase:</strong>
+          <ul>
+            <li>El bucket debe ser <strong>Public</strong> (Supabase > Storage > Editar bucket > "Public bucket").</li>
+            <li>Si RLS está activado en Storage, ejecuta en SQL Editor:
+              <br/><code>CREATE POLICY "Lectura publica storage" ON storage.objects FOR SELECT USING (true);</code>
+            </li>
+          </ul>
+        </div>
       </div>
     </ion-card-content>
   </ion-card>

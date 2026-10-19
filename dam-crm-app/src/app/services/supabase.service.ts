@@ -122,7 +122,8 @@ export class SupabaseService {
   }
 
   async listFiles(bucketName: string): Promise<StorageFileItem[]> {
-    const { data, error } = await this.supabase.storage.from(bucketName).list('', {
+    const cleanBucket = (bucketName || 'images').trim();
+    const { data, error } = await this.supabase.storage.from(cleanBucket).list('', {
       limit: 100,
       offset: 0,
       sortBy: { column: 'name', order: 'asc' }
@@ -130,13 +131,34 @@ export class SupabaseService {
     if (error) throw error;
 
     const files = (data || []).filter(item => item.name && item.name !== '.emptyFolderPlaceholder');
-    return files.map(file => {
-      const { data: urlData } = this.supabase.storage.from(bucketName).getPublicUrl(file.name);
-      return {
+    const items: StorageFileItem[] = [];
+
+    for (const file of files) {
+      let publicUrl = '';
+      try {
+        const { data: urlData } = this.supabase.storage.from(cleanBucket).getPublicUrl(file.name);
+        publicUrl = urlData?.publicUrl || '';
+      } catch (uErr) {
+        console.warn('Error getPublicUrl:', uErr);
+      }
+
+      // Si el bucket es privado o falla la URL publica, intentar generar signed URL
+      try {
+        const { data: signedData } = await this.supabase.storage.from(cleanBucket).createSignedUrl(file.name, 3600);
+        if (signedData?.signedUrl) {
+          publicUrl = signedData.signedUrl;
+        }
+      } catch (sErr) {
+        // mantener publicUrl
+      }
+
+      items.push({
         ...file,
-        publicUrl: urlData.publicUrl
-      };
-    });
+        publicUrl
+      });
+    }
+
+    return items;
   }
 
   getPublicUrl(bucketName: string, path: string): string {

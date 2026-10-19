@@ -41,7 +41,8 @@ import {
   arrowBackOutline,
   folderOutline,
   logInOutline,
-  logOutOutline
+  logOutOutline,
+  searchOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -70,7 +71,9 @@ import {
     IonBackButton,
     IonSpinner,
     IonToast,
-    IonChip
+    IonChip,
+    IonItem,
+    IonInput
   ],
 })
 export class StoragePage implements OnInit {
@@ -80,7 +83,7 @@ export class StoragePage implements OnInit {
 
   // Bucket por defecto y alternativas comunes
   currentBucket = 'images';
-  availableBuckets: string[] = ['images', 'storage', 'fotos', 'public', 'dam'];
+  availableBuckets: string[] = ['images', 'storage', 'fotos', 'public', 'dam', 'bucket', 'clientes'];
 
   images: StorageFileItem[] = [];
   isLoading = false;
@@ -102,7 +105,8 @@ export class StoragePage implements OnInit {
       arrowBackOutline,
       folderOutline,
       logInOutline,
-      logOutOutline
+      logOutOutline,
+      searchOutline
     });
   }
 
