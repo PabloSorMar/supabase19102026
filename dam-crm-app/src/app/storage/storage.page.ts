@@ -30,6 +30,7 @@ import {
   AlertController
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+import { ThemeService } from '../services/theme.service';
 import {
   imagesOutline,
   cloudUploadOutline,
@@ -42,7 +43,9 @@ import {
   folderOutline,
   logInOutline,
   logOutOutline,
-  searchOutline
+  searchOutline,
+  moonOutline,
+  sunnyOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -78,12 +81,13 @@ import {
 })
 export class StoragePage implements OnInit {
   public supabaseService = inject(SupabaseService);
+  public themeService = inject(ThemeService);
   private cdr = inject(ChangeDetectorRef);
   private alertCtrl = inject(AlertController);
 
-  // Bucket por defecto y alternativas comunes
-  currentBucket = 'images';
-  availableBuckets: string[] = ['images', 'storage', 'fotos', 'public', 'dam', 'bucket', 'clientes'];
+  // Bucket por defecto configurado a 'galeria' donde está la foto guardada
+  currentBucket = 'galeria';
+  availableBuckets: string[] = ['galeria', 'images', 'storage', 'fotos', 'public', 'dam', 'clientes', 'bucket'];
 
   images: StorageFileItem[] = [];
   isLoading = false;
@@ -106,7 +110,9 @@ export class StoragePage implements OnInit {
       folderOutline,
       logInOutline,
       logOutOutline,
-      searchOutline
+      searchOutline,
+      moonOutline,
+      sunnyOutline
     });
   }
 

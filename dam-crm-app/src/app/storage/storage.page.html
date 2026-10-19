@@ -5,6 +5,10 @@
     </ion-buttons>
     <ion-title>Imágenes Storage Bucket</ion-title>
     <ion-buttons slot="end">
+      <!-- BOTÓN MODO OSCURO / CLARO -->
+      <ion-button (click)="themeService.toggleTheme()" [title]="themeService.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+        <ion-icon slot="icon-only" [name]="themeService.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+      </ion-button>
       <ion-button (click)="loadImages()" title="Recargar imágenes">
         <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
       </ion-button>

@@ -2,6 +2,10 @@
   <ion-toolbar color="primary">
     <ion-title>DAM CRM - Clientes</ion-title>
     <ion-buttons slot="end">
+      <!-- BOTÓN MODO OSCURO / CLARO -->
+      <ion-button (click)="themeService.toggleTheme()" [title]="themeService.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+        <ion-icon slot="icon-only" [name]="themeService.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+      </ion-button>
       <!-- Navegación a la página de imágenes de Storage -->
       <ion-button routerLink="/storage" fill="solid" color="light" size="small" class="ion-margin-end">
         <ion-icon slot="start" name="images-outline"></ion-icon>

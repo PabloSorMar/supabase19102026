@@ -28,6 +28,7 @@ import {
   AlertController
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+import { ThemeService } from '../services/theme.service';
 import {
   createOutline,
   trashOutline,
@@ -35,7 +36,9 @@ import {
   logInOutline,
   logOutOutline,
   personCircleOutline,
-  imagesOutline
+  imagesOutline,
+  moonOutline,
+  sunnyOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -71,6 +74,7 @@ import {
 })
 export class HomePage implements OnInit {
   public supabaseService = inject(SupabaseService);
+  public themeService = inject(ThemeService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private alertCtrl = inject(AlertController);
@@ -93,7 +97,9 @@ export class HomePage implements OnInit {
       logInOutline,
       logOutOutline,
       personCircleOutline,
-      imagesOutline
+      imagesOutline,
+      moonOutline,
+      sunnyOutline
     });
 
     this.clientForm = this.fb.group({
