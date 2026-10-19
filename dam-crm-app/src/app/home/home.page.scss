@@ -1,0 +1,61 @@
+.user-session-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+
+    .user-icon {
+      font-size: 1.5rem;
+      color: var(--ion-color-primary);
+    }
+
+    .user-email {
+      font-weight: 500;
+    }
+  }
+}
+
+ion-card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+h3 {
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  padding-left: 8px;
+  color: var(--ion-color-dark);
+}
+
+ion-list {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+ion-item-sliding {
+  ion-item {
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
+
+    h2 {
+      font-weight: 600;
+      color: var(--ion-text-color);
+    }
+
+    p {
+      color: var(--ion-color-medium);
+      font-size: 0.85rem;
+    }
+  }
+}

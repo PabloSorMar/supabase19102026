@@ -1,0 +1,77 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>DAM CRM - Gestión de Clientes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="loadClients()" title="Recargar lista">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- FORMULARIO REACTIVO (Crear / Editar Cliente) -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ editingClientId ? 'Editar Cliente' : 'Nuevo Cliente' }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <form [formGroup]="clientForm" (ngSubmit)="saveClient()">
+        <ion-item>
+          <ion-label position="stacked">Nombre</ion-label>
+          <ion-input type="text" formControlName="nombre" placeholder="Nombre completo"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Empresa</ion-label>
+          <ion-input type="text" formControlName="empresa" placeholder="Nombre de la empresa"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Email</ion-label>
+          <ion-input type="email" formControlName="email" placeholder="correo@empresa.com"></ion-input>
+        </ion-item>
+        <div class="ion-margin-top">
+          <ion-button type="submit" expand="block" [disabled]="clientForm.invalid">
+            {{ editingClientId ? 'Actualizar Cliente' : 'Guardar Cliente' }}
+          </ion-button>
+          @if (editingClientId) {
+          <ion-button type="button" fill="clear" expand="block" color="medium" (click)="resetForm()">
+            Cancelar
+          </ion-button>
+          }
+        </div>
+      </form>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- TABLA / LISTA DE CLIENTES -->
+  <h3>Listado de Clientes</h3>
+  <ion-list>
+    @for (client of clients; track client.id) {
+    <ion-item-sliding>
+      <ion-item>
+        <ion-label>
+          <h2>{{ client.nombre }}</h2>
+          <p>{{ client.empresa }} | {{ client.email }}</p>
+        </ion-label>
+      </ion-item>
+      <!-- Opciones al deslizar -->
+      <ion-item-options side="end">
+        <ion-item-option color="primary" (click)="editClient(client)">
+          <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+        </ion-item-option>
+        <ion-item-option color="danger" (click)="deleteClient(client.id!)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+    } @empty {
+    <ion-item>
+      <ion-label color="medium">No hay clientes registrados.</ion-label>
+    </ion-item>
+    }
+  </ion-list>
+
+  <ion-toast [isOpen]="isToastOpen" [message]="toastMessage" duration="2500" (didDismiss)="setToastOpen(false)">
+  </ion-toast>
+</ion-content>
