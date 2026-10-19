@@ -1,11 +1,43 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>DAM CRM - Gestión de Clientes</ion-title>
+    <ion-title>DAM CRM - Clientes</ion-title>
     <ion-buttons slot="end">
+      <!-- Navegación a la página de imágenes de Storage -->
+      <ion-button routerLink="/storage" fill="solid" color="light" size="small" class="ion-margin-end">
+        <ion-icon slot="start" name="images-outline"></ion-icon>
+        Storage
+      </ion-button>
       <ion-button (click)="loadClients()" title="Recargar lista">
         <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
+  </ion-toolbar>
+
+  <!-- BARRA DE ESTADO DE SESIÓN -->
+  <ion-toolbar color="light">
+    @if (currentUser()) {
+    <div class="user-bar">
+      <div class="user-tag">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        <span>{{ currentUser()?.email }}</span>
+        <ion-badge [color]="userRole() === 'admin' ? 'success' : 'medium'">
+          Rol: {{ userRole() || 'user' }}
+        </ion-badge>
+      </div>
+      <ion-button fill="outline" color="danger" size="small" (click)="doLogout()">
+        <ion-icon slot="start" name="log-out-outline"></ion-icon>
+        Cerrar Sesión
+      </ion-button>
+    </div>
+    } @else {
+    <div class="user-bar">
+      <span class="anon-text">Modo lectura (Sin autenticar)</span>
+      <ion-button fill="outline" color="primary" size="small" (click)="promptLogin('Inicia sesión con tu cuenta de Supabase')">
+        <ion-icon slot="start" name="log-in-outline"></ion-icon>
+        Iniciar Sesión
+      </ion-button>
+    </div>
+    }
   </ion-toolbar>
 </ion-header>
 
@@ -72,6 +104,6 @@
     }
   </ion-list>
 
-  <ion-toast [isOpen]="isToastOpen" [message]="toastMessage" duration="2500" (didDismiss)="setToastOpen(false)">
+  <ion-toast [isOpen]="isToastOpen" [message]="toastMessage" duration="3000" (didDismiss)="setToastOpen(false)">
   </ion-toast>
 </ion-content>

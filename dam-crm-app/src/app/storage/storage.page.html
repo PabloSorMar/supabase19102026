@@ -1,0 +1,126 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="Clientes"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Imágenes Storage Bucket</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="loadImages()" title="Recargar imágenes">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- SELECTOR DE BUCKET -->
+  <ion-toolbar color="light">
+    <div class="bucket-bar">
+      <div class="bucket-label">
+        <ion-icon name="folder-outline"></ion-icon>
+        <strong>Bucket:</strong>
+      </div>
+      <div class="bucket-chips">
+        @for (b of availableBuckets; track b) {
+        <ion-chip [color]="currentBucket === b ? 'primary' : 'medium'" (click)="selectBucket(b)">
+          {{ b }}
+        </ion-chip>
+        }
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- ACCIONES: SUBIR IMAGEN Y CONTROL -->
+  <ion-card class="upload-card">
+    <ion-card-content class="upload-content">
+      <div class="upload-info">
+        <h3>Explorador de Bucket: <code>{{ currentBucket }}</code></h3>
+        <p>Visualiza y administra las imágenes almacenadas en Supabase Storage.</p>
+      </div>
+
+      <div class="upload-actions">
+        <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;" />
+        <ion-button color="success" (click)="fileInput.click()" [disabled]="isUploading">
+          @if (isUploading) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          Subiendo...
+          } @else {
+          <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+          Subir Nueva Imagen
+          }
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- ESTADO DE CARGA -->
+  @if (isLoading) {
+  <div class="loading-state">
+    <ion-spinner name="bubbles" color="primary"></ion-spinner>
+    <p>Cargando imágenes de Supabase Storage...</p>
+  </div>
+  }
+
+  <!-- CUADRÍCULA DE IMÁGENES EN CARDS -->
+  @if (!isLoading && images.length > 0) {
+  <ion-grid>
+    <ion-row>
+      @for (img of images; track img.name) {
+      <ion-col size="12" size-sm="6" size-md="4" size-lg="3">
+        <ion-card class="image-card">
+          <div class="card-img-wrapper">
+            <img [src]="img.publicUrl" [alt]="img.name" loading="lazy" (error)="$any($event.target).src = 'assets/shapes.svg'" />
+          </div>
+
+          <ion-card-header>
+            <ion-card-title class="image-title" [title]="img.name">
+              {{ img.name }}
+            </ion-card-title>
+            <ion-card-subtitle>
+              {{ formatSize(img.metadata?.size) }}
+            </ion-card-subtitle>
+          </ion-card-header>
+
+          <ion-card-content>
+            <div class="card-actions">
+              <ion-button fill="outline" size="small" [href]="img.publicUrl" target="_blank">
+                <ion-icon slot="icon-only" name="open-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="outline" color="secondary" size="small" (click)="copyUrl(img.publicUrl)" title="Copiar URL">
+                <ion-icon slot="icon-only" name="copy-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="outline" color="danger" size="small" (click)="deleteImage(img)" title="Eliminar">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      }
+    </ion-row>
+  </ion-grid>
+  }
+
+  <!-- ESTADO VACÍO -->
+  @if (!isLoading && images.length === 0) {
+  <ion-card color="light" class="empty-card">
+    <ion-card-content>
+      <ion-icon name="images-outline" class="empty-icon"></ion-icon>
+      <h3>No hay imágenes en el bucket <code>{{ currentBucket }}</code></h3>
+      <p>
+        Puedes pulsar en <strong>"Subir Nueva Imagen"</strong> para añadir una fotografía directamente, o cambiar de bucket arriba si creaste uno con otro nombre.
+      </p>
+      <div class="rls-hint">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <small>
+          <strong>Nota sobre RLS en Storage:</strong> Para leer imágenes anónimamente, tu bucket debe estar marcado como <em>Public</em> o tener una política SELECT en <code>storage.objects</code>.
+        </small>
+      </div>
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <ion-toast [isOpen]="isToastOpen" [message]="toastMessage" duration="3500" (didDismiss)="isToastOpen = false">
+  </ion-toast>
+</ion-content>

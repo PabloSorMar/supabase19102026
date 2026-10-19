@@ -3,6 +3,16 @@ import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { Client } from '../models/client.model';
 
+export interface StorageFileItem {
+  name: string;
+  id?: string | null;
+  updated_at?: string | null;
+  created_at?: string | null;
+  last_accessed_at?: string | null;
+  metadata?: any;
+  publicUrl: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -102,5 +112,50 @@ export class SupabaseService {
   async deleteClient(id: string): Promise<void> {
     const { error } = await this.supabase.from('clients').delete().eq('id', id);
     if (error) throw error;
+  }
+
+  // --- STORAGE BUCKET ---
+  async listBuckets() {
+    const { data, error } = await this.supabase.storage.listBuckets();
+    if (error) throw error;
+    return data || [];
+  }
+
+  async listFiles(bucketName: string): Promise<StorageFileItem[]> {
+    const { data, error } = await this.supabase.storage.from(bucketName).list('', {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: 'name', order: 'asc' }
+    });
+    if (error) throw error;
+
+    const files = (data || []).filter(item => item.name && item.name !== '.emptyFolderPlaceholder');
+    return files.map(file => {
+      const { data: urlData } = this.supabase.storage.from(bucketName).getPublicUrl(file.name);
+      return {
+        ...file,
+        publicUrl: urlData.publicUrl
+      };
+    });
+  }
+
+  getPublicUrl(bucketName: string, path: string): string {
+    const { data } = this.supabase.storage.from(bucketName).getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  async uploadFile(bucketName: string, path: string, file: File) {
+    const { data, error } = await this.supabase.storage.from(bucketName).upload(path, file, {
+      cacheControl: '3600',
+      upsert: true
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteFile(bucketName: string, path: string) {
+    const { data, error } = await this.supabase.storage.from(bucketName).remove([path]);
+    if (error) throw error;
+    return data;
   }
 }

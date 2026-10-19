@@ -1,25 +1,27 @@
-.user-session-bar {
+.user-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 16px;
+  padding: 6px 16px;
+  width: 100%;
 
-  .user-info {
+  .user-tag {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    font-weight: 500;
 
-    .user-icon {
-      font-size: 1.5rem;
+    ion-icon {
+      font-size: 1.4rem;
       color: var(--ion-color-primary);
     }
+  }
 
-    .user-email {
-      font-weight: 500;
-    }
+  .anon-text {
+    font-size: 0.85rem;
+    color: var(--ion-color-medium);
+    font-style: italic;
   }
 }
 

@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SupabaseService } from '../services/supabase.service';
 import { Client } from '../models/client.model';
@@ -22,10 +23,20 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonToast,
-  IonButtons
+  IonButtons,
+  IonBadge,
+  AlertController
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { createOutline, trashOutline, refreshOutline } from 'ionicons/icons';
+import {
+  createOutline,
+  trashOutline,
+  refreshOutline,
+  logInOutline,
+  logOutOutline,
+  personCircleOutline,
+  imagesOutline
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-home',
@@ -34,6 +45,7 @@ import { createOutline, trashOutline, refreshOutline } from 'ionicons/icons';
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     ReactiveFormsModule,
     IonHeader,
     IonToolbar,
@@ -53,13 +65,15 @@ import { createOutline, trashOutline, refreshOutline } from 'ionicons/icons';
     IonCardHeader,
     IonCardTitle,
     IonToast,
-    IonButtons
+    IonButtons,
+    IonBadge
   ],
 })
 export class HomePage implements OnInit {
   public supabaseService = inject(SupabaseService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
+  private alertCtrl = inject(AlertController);
 
   clients: Client[] = [];
   clientForm: FormGroup;
@@ -67,11 +81,19 @@ export class HomePage implements OnInit {
   toastMessage = '';
   isToastOpen = false;
 
+  // Señales reactivas
+  currentUser = this.supabaseService.currentUser;
+  userRole = this.supabaseService.userRole;
+
   constructor() {
     addIcons({
       createOutline,
       trashOutline,
-      refreshOutline
+      refreshOutline,
+      logInOutline,
+      logOutOutline,
+      personCircleOutline,
+      imagesOutline
     });
 
     this.clientForm = this.fb.group({
@@ -94,26 +116,44 @@ export class HomePage implements OnInit {
     }
   }
 
+  // --- REQUISITO 1: SOLICITAR LOGIN AL INSERTAR O ACTUALIZAR ---
   async saveClient() {
     if (this.clientForm.invalid) return;
+
+    // Si no está autenticado, solicitar login en Supabase
+    if (!this.currentUser()) {
+      const isLogged = await this.promptLogin(
+        this.editingClientId
+          ? 'Debes identificarte para actualizar este cliente'
+          : 'Debes identificarte para insertar un nuevo cliente'
+      );
+      if (!isLogged) return;
+    }
+
     try {
       const formValue = this.clientForm.value;
       if (this.editingClientId) {
         await this.supabaseService.updateClient(this.editingClientId, formValue);
-        this.showToast('Cliente actualizado');
+        this.showToast('Cliente actualizado con éxito');
       } else {
         await this.supabaseService.createClient(formValue);
-        this.showToast('Cliente guardado');
+        this.showToast('Cliente guardado con éxito');
       }
       this.resetForm();
       await this.loadClients();
       this.cdr.detectChanges();
     } catch (e: any) {
-      this.showToast('Error de guardado: ' + (e.message || e));
+      this.handleSupabaseError(e, this.editingClientId ? 'actualizar' : 'insertar');
     }
   }
 
-  editClient(client: Client) {
+  // --- REQUISITO 1: SOLICITAR LOGIN AL EDITAR ---
+  async editClient(client: Client) {
+    if (!this.currentUser()) {
+      const isLogged = await this.promptLogin('Debes identificarte para editar este cliente');
+      if (!isLogged) return;
+    }
+
     this.editingClientId = client.id!;
     this.clientForm.patchValue({
       nombre: client.nombre,
@@ -121,16 +161,99 @@ export class HomePage implements OnInit {
       email: client.email
     });
     this.cdr.detectChanges();
+    this.showToast('Editando cliente: ' + client.nombre);
   }
 
+  // --- REQUISITO 1: SOLICITAR LOGIN AL ELIMINAR ---
   async deleteClient(id: string) {
+    if (!this.currentUser()) {
+      const isLogged = await this.promptLogin('Debes identificarte para eliminar este cliente');
+      if (!isLogged) return;
+    }
+
     try {
       await this.supabaseService.deleteClient(id);
-      this.showToast('Cliente eliminado');
+      this.showToast('Cliente eliminado correctamente');
       await this.loadClients();
       this.cdr.detectChanges();
     } catch (e: any) {
-      this.showToast('Error eliminando: ' + (e.message || e));
+      this.handleSupabaseError(e, 'eliminar');
+    }
+  }
+
+  // --- DIÁLOGO DE LOGIN CON ALERT CONTROLLER ---
+  async promptLogin(reasonMessage: string): Promise<boolean> {
+    const alert = await this.alertCtrl.create({
+      header: 'Iniciar Sesión',
+      subHeader: reasonMessage,
+      message: 'Ingresa las credenciales de tu usuario en Supabase:',
+      inputs: [
+        {
+          name: 'email',
+          type: 'email',
+          placeholder: 'admin@test.com'
+        },
+        {
+          name: 'password',
+          type: 'password',
+          placeholder: 'Contraseña'
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Acceder',
+          handler: (data) => {
+            if (!data.email || !data.password) {
+              this.showToast('Introduce email y contraseña');
+              return false;
+            }
+            return true;
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+    const result = await alert.onDidDismiss();
+
+    if (result.role === 'cancel' || !result.data?.values) {
+      this.showToast('Operación cancelada. Se requiere login para realizar cambios.');
+      return false;
+    }
+
+    const { email, password } = result.data.values;
+    try {
+      await this.supabaseService.login(email, password);
+      this.showToast(`Bienvenido: ${email} (${this.userRole() || 'user'})`);
+      this.cdr.detectChanges();
+      return true;
+    } catch (err: any) {
+      this.showToast('Error de login: ' + (err.message || err));
+      return false;
+    }
+  }
+
+  async doLogout() {
+    try {
+      await this.supabaseService.logout();
+      this.showToast('Sesión cerrada');
+      this.cdr.detectChanges();
+    } catch (e: any) {
+      this.showToast('Error al cerrar sesión: ' + (e.message || e));
+    }
+  }
+
+  handleSupabaseError(e: any, actionName: string) {
+    console.error('Error Supabase:', e);
+    const msg = e?.message || JSON.stringify(e);
+    if (e?.code === '42501' || msg.includes('row-level security') || msg.includes('policy')) {
+      this.showToast(`[RLS Supabase] Error al ${actionName}: Tu usuario no tiene el rol 'admin' en la tabla 'profiles'.`);
+    } else {
+      this.showToast(`Error al ${actionName}: ` + msg);
     }
   }
 
